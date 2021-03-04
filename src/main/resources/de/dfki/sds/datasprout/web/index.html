@@ -1,0 +1,423 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+
+        <link href="/css/bootstrap.css" rel="stylesheet" />
+        <link href="/css/all.min.css" rel="stylesheet" />
+        <link href="/css/jquery-ui.css" rel="stylesheet" />
+
+        <script src="/js/jquery.min.js"></script>
+        <script src="/js/jquery-ui.min.js"></script>
+        <script src="/js/bootstrap.min.js" ></script>
+        <script src="/js/vue.js" ></script>
+
+        <link rel="shortcut icon" href="/favicon.ico">
+        <title>Demo | Data Sprout</title>
+    </head>
+    <body>
+
+        <div class="container" id="app">
+            <div class="row">
+                <div class="col">
+
+                    <img src="img/datasprout.png" style="height: 120px;" class="float-left"/>
+                    <h1>Data Sprout<br/><span class="text-muted" style="font-size: 20px">Dataset Generation Patterns for Evaluating<br/>Knowledge Graph Construction</span></h1>
+
+                    <br/>
+                    <br/>
+                    <h5><i class="fa fa-project-diagram"></i> Knowledge Graph Selection</h5>
+
+                    <p>Select a knowledge graph that is used as a source to generate the data below.</p>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="kg" value="GL" v-model="kg">
+                        <label class="form-check-label">
+                            <b>GL</b> - <a href="http://www.dfki.uni-kl.de/~mschroeder/ld/gl" target="_blank">Guideline Ontology</a> &nbsp;
+                            <span class="text-muted">42,086 Statements / 2.7 MB</span>
+                            &nbsp;
+                            <a href="/kg/GL.ttl" target="_blank"><i class="fa fa-file"></i> TTL</a>
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="kg" value="BSBM" v-model="kg">
+                        <label class="form-check-label">
+                            <b>BSBM</b> - <a href="http://wifo5-03.informatik.uni-mannheim.de/bizer/berlinsparqlbenchmark/" target="_blank">Berlin SPARQL Benchmark</a> &nbsp;
+                            <span class="text-muted">40,177 Statements / 3.8 MB</span>
+                            &nbsp;
+                            <a href="/kg/BSBM.ttl" target="_blank"><i class="fa fa-file"></i> TTL</a>
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="kg" value="LUBM" v-model="kg">
+                        <label class="form-check-label">
+                            <b>LUBM</b> - <a href="http://swat.cse.lehigh.edu/projects/lubm/" target="_blank">Lehigh University Benchmark</a> &nbsp;
+                            <span class="text-muted">100,573 Statements / 6.3 MB</span>
+                            &nbsp;
+                            <a href="/kg/LUBM.ttl" target="_blank"><i class="fa fa-file"></i> TTL</a>
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="kg" value="SP2B" v-model="kg">
+                        <label class="form-check-label">
+                            <b>SP2B</b> - <a href="http://dbis.informatik.uni-freiburg.de/index.php?project=SP2B" target="_blank">The SP²Bench SPARQL Performance Benchmark</a>
+                            &nbsp;
+                            <span class="text-muted">50,168 Statements / 2.9 MB</span>
+                            &nbsp;
+                            <a href="/kg/SP2B.ttl" target="_blank"><i class="fa fa-file"></i> TTL</a>
+                        </label>
+                    </div>
+                    <br/>
+
+                    
+                    
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#"><i class="fa fa-table"></i> Excel</a>
+                        </li>
+                    </ul>
+
+                    <div v-if="mode == 'excel'" class="form">
+                        <br/>
+
+                        <div class="row">
+
+                            <div class="col-6">
+
+                                <div class="form-group">
+                                    <label>Number of Workbooks to Generate</label>
+                                    <input type="number" class="form-control" placeholder="Number of workbooks" v-model="numberOfWorkbooks" min="1" max="3">
+                                    <!--small class="form-text text-muted"></small-->
+                                </div>
+                                <div class="form-group">
+                                    <label>Random Seed</label>
+                                    <input type="number" class="form-control" placeholder="Random seed" v-model="randomSeed">
+                                    <!--small class="form-text text-muted"></small-->
+                                </div>
+                                <div class="form-group">
+                                    <label>Language</label>
+                                    <select type="number" class="form-control" placeholder="Language" v-model="lang">
+                                        <option value="en">English</option>
+                                        <option value="de">German</option>
+                                    </select>
+                                    <small class="form-text text-muted">Decides date format and boolean value names.</small>
+                                </div>
+
+                                <br/>
+
+                                <b>Provenance</b>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" v-model="provenanceAsCellComment">
+                                    <label class="form-check-label">
+                                        Show Provenance as Cell Comment
+                                    </label>
+                                    <br/>
+                                    <small class="text-muted">
+                                        Shows for each cell a cell comment with the expected statements in turtle format.
+                                        Note that some spreadsheet tools can not handle large amounts of cell comments.
+                                    </small>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" v-model="writeExpectedModel">
+                                    <label class="form-check-label">
+                                        Write Expected RDF Model
+                                    </label>
+                                    <br/>
+                                    <small class="text-muted">All statements that should be found in the spreadsheet.</small>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" v-model="writeProvenanceModel">
+                                    <label class="form-check-label">
+                                        Write Provenance RDF Model
+                                    </label>
+                                    <br/>
+                                    <small class="text-muted">For each cell in a sheet the provenance information using reified statements.</small>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" v-model="writeProvenanceCSV">
+                                    <label class="form-check-label">
+                                        Write Provenance CSV Table
+                                    </label>
+                                    <br/>
+                                    <small class="text-muted">For each cell in a sheet the provenance information as a CSV table.</small>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" v-model="writeGenerationSummaryJson">
+                                    <label class="form-check-label">
+                                        Write Generation Summary JSON
+                                    </label>
+                                    <br/>
+                                    <small class="text-muted">Explains what and how often patterns where used for each sheet.</small>
+                                </div>
+
+                                <br/>
+                                <br/>
+                                <button class="btn btn-primary" @click="sprawl()"><i class="fa fa-seedling"></i> Sprawl</button>
+                                <br/>
+                                <span class="text-muted small">
+                                    When you click on the button, a new tab page will be opened.
+                                    Depending on the settings the generation can take some time.<br/>
+                                    If it was successful, a ZIP file is downloaded which contains all generated resources.
+                                    If an error occurs, the page displays some error information instead.
+                                </span>
+                                <br/>
+                                <br/>
+                                <p>
+                                    You can also download <a href="http://www.dfki.uni-kl.de/~mschroeder/demo/datasprout/data/" target="_blank">already generated datasets</a>.
+                                </p>
+                            </div>
+                            <div class="col-6">
+
+                                <div class="form-group">
+                                    Generation Patterns 
+                                    <button class="btn btn-outline-info btn-sm" @click="selectPatterns('all')">All</button> 
+                                    <button class="btn btn-outline-info btn-sm" @click="selectPatterns('none')">None</button>
+                                </div>
+
+                                <!-- Level: {{messinessLevel}} -->
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Activate</th>
+                                            <th>Pattern</th>
+                                            <th>Image</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-justify">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" style="margin: 0;" v-model="patterns['Numeric Information as Text']">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/#Numeric-Information-as-Text" target="_blank">
+                                                    Numeric Information as Text
+                                                </a>
+                                                <br/>
+                                                <span class="text-muted small">There is numeric information, therefore, it can be also represented as text</span>
+                                            </td>
+                                            <td>
+                                                <img class="img-fluid" src="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/img/Numeric%20Information%20as%20Text.png" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-justify">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" style="margin: 0;" v-model="patterns['Acronyms or Symbols']">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/#Acronyms-or-Symbols" target="_blank">
+                                                    Acronyms or Symbols
+                                                </a>
+                                                <br/>
+                                                <span class="text-muted small">An entity refers to another entity or has a literal value, therefore, to save time a rather short acronym or symbol string is used to refer to an entity or a literal value</span>
+                                            </td>
+                                            <td>
+                                                <img class="img-fluid" src="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/img/Acronyms%20or%20Symbols.png" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-justify">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" style="margin: 0;" v-model="patterns['Multiple Surface Forms']">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/#Multiple-Surface-Forms" target="_blank">
+                                                    Multiple Surface Forms
+                                                </a>
+                                                <br/>
+                                                <span class="text-muted small">
+                                                    Entities can be mentioned in various ways, therefore, different cells contain distinct surface forms of equal entities
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <img class="img-fluid" src="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/img/Multiple%20Surface%20Forms.png" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-justify">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" style="margin: 0;" v-model="patterns['Property Value as Color']">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/#Property-Value-as-Color" target="_blank">
+                                                    Property Value as Color
+                                                </a>
+                                                <br/>
+                                                <span class="text-muted small">
+                                                    Some entities have different values for the same property, therefore, different colors that encode property values are chosen to color ranges
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <img class="img-fluid" src="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/img/Property%20Value%20as%20Color.png" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-justify">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" style="margin: 0;" v-model="patterns['Partial Formatting Indicates Relations']">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/#Partial-Formatting-Indicates-Relations" target="_blank">
+                                                    Partial Formatting Indicates Relations
+                                                </a>
+                                                <br/>
+                                                <span class="text-muted small">
+                                                    Multiple entities in one cell have different relationships with another entity, therefore, partial formatting is used to indicate their relations
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <img class="img-fluid" src="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/img/Partial%20Formatting%20Indicates%20Relations.png" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-justify">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" style="margin: 0;" v-model="patterns['Outdated is Formatted']">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/#Outdated-is-Formatted" target="_blank">
+                                                    Outdated is Formatted
+                                                </a>
+                                                <br/>
+                                                <span class="text-muted small">
+                                                    Information is not valid anymore, but must not be removed completely, therefore, outdated information is formatted
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <img class="img-fluid" src="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/img/Outdated%20is%20Formatted.png" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-justify">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" style="margin: 0;" disabled checked>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/#Multiple-Entities-in-one-Cell" target="_blank">
+                                                    Multiple Entities in one Cell
+                                                </a>
+                                                <br/>
+                                                <span class="text-muted small">
+                                                    Multiple entities have to be referred to, therefore, entities are listed in the same cell
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <img class="img-fluid" src="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/img/Multiple%20Entities%20in%20one%20Cell.png" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-justify">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" style="margin: 0;" v-model="patterns['Intra-Cell Additional Information']">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/#Intra-Cell-Additional-Information" target="_blank">
+                                                    Intra-Cell Additional Information
+                                                </a>
+                                                <br/>
+                                                <span class="text-muted small">
+                                                    Additional information is related to information that is already recorded in a cell, therefore, the additional information is recorded in the same cell
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <img class="img-fluid" src="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/img/Intra-Cell%20Additional%20Information.png" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-justify">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" style="margin: 0;" v-model="patterns['Multiple Types in a Table']">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/#Multiple-Types-in-a-Table" target="_blank">
+                                                    Multiple Types in a Table
+                                                </a>
+                                                <br/>
+                                                <span class="text-muted small">
+                                                    Some entities of different types share same properties, therefore, they are recorded in the same table
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <img class="img-fluid" src="http://www.dfki.uni-kl.de/~mschroeder/pattern-language-spreadsheets/img/Multiple%20Types%20in%20a%20Table.png" />
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <script>
+            var vm = new Vue({
+                el: '#app',
+                data: {
+                    kg: 'GL',
+                    mode: 'excel',
+
+                    numberOfWorkbooks: 1,
+                    randomSeed: 42,
+                    lang: "en",
+
+                    provenanceAsCellComment: false,
+                    writeExpectedModel: true,
+                    writeProvenanceModel: true,
+                    writeProvenanceCSV: true,
+                    writeGenerationSummaryJson: true,
+                    
+                    patterns: {
+                        "Numeric Information as Text": true,
+                        "Acronyms or Symbols": true,
+                        "Multiple Surface Forms": true,
+                        "Property Value as Color": true,
+                        "Partial Formatting Indicates Relations": true,
+                        "Outdated is Formatted": true,
+                        "Multiple Entities in one Cell": true,
+                        "Intra-Cell Additional Information": true,
+                        "Multiple Types in a Table": true
+                    }
+                },
+                methods: {
+                    sprawl: function () {
+                        //params
+                        var paramstr = $.param({
+                            kg: this.kg,
+                            mode: this.mode,
+                            lang: this.lang,
+                            numberOfWorkbooks: this.numberOfWorkbooks,
+                            randomSeed: this.randomSeed,
+                            patterns: JSON.stringify(this.patterns),
+
+                            provenanceAsCellComment: this.provenanceAsCellComment,
+                            writeExpectedModel: this.writeExpectedModel,
+                            writeProvenanceModel: this.writeProvenanceModel,
+                            writeProvenanceCSV: this.writeProvenanceCSV,
+                            writeGenerationSummaryJson: this.writeGenerationSummaryJson
+                        });
+
+                        window.open("/sprawl?" + paramstr, "_blank");
+                    },
+                    selectPatterns: function(mode) {
+                        for(var key in this.patterns) {
+                            this.patterns[key] = mode === 'all';
+                        }
+                    }
+                }
+            });
+        </script>
+
+    </body>
+</html>
